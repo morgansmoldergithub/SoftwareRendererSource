@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=.7">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;subset=latin" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Open Sans'), local('OpenSans'), url('http://themes.googleusercontent.com/static/fonts/opensans/v5/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff') format('woff');
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            background-color: rgb(240, 192, 212);
+            font-family: 'open sans', arial, sans-serif;
+            font-weight: lighter;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .canvas {
+            width: 512px;
+            height: 512px;
+            background-color: rgb(240, 192, 212);
+        }
+
+        .code_console {
+            background-color: rgb(45, 45, 45);
+            width: 400px;
+            height: 180px;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            border: none;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .text {
+            color: "#454545";
+        }
+
+        .heading {
+            color: #151515;
+        }
+
+        .flex {
+            display: flex;
+            justify-content: center;
+            flex-direction: row;
+            align-items: center;
+
+            width: 100%;
+            min-height: 100%;
+        }
+
+        .loader {
+            background-color: rgb(240, 192, 212);
+            position: fixed;
+            z-index: 1000;
+            flex-direction: column;
+
+        }
+
+        .hidden {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 2s, opacity 2s linear;
+            pointer-events: none;
+        }
+
+        a {
+            font-weight: bold;
+        }
+
+        @media (max-width: 1200px) {
+            .flex {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+
+        @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+            .flex {
+                /* internet explorer idiocy: https://stackoverflow.com/questions/19371626/flexbox-not-centering-vertically-in-ie */
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader" class="loader flex">
+        <div id="status">Downloading...</div>
+        <progress hidden id="progress" max=100 value=0></progress>
+    </div>
+    <div style="display:none;" id="content" class="flex">
+        <!-- Canvas that the C++ code will draw into -->
+        <canvas id="canvas" class="canvas" oncontextmenu="event.preventDefault()">
+        </canvas>
+        <div>
+            <h1 class="heading">C++ Software Renderer</h1>
+            <p class="text">
+                Software renderer implemented in c++, cross compiled for the web using <a
+                    href="https://emscripten.org/">Emscripten</a>.
+            </p>
+            <h2 class="heading">Console Output</h2>
+            <textarea class="code_console" id="output" rows=8></textarea>
+            <h2 class="heading">
+                External Libraries
+            </h2>
+            <p class="text"><a href="https://www.libsdl.org/">SDL 2.0</a> - Platform Abstraction, User Input</p>
+            <p class="text"><a href="https://github.com/nothings/stb">STB Image</a> - Texture Loading</p>
+            <p class="text"><b>All rendering logic and math written from scratch.</b></p>
+        </div>
+    </div>
+    <!-- Bind emscripten code to the page -->
+    <script type='text/javascript'>
+        var statusElement = document.getElementById("status"),
+            progressElement = document.getElementById("progress"),
+            Module = {
+                preRun: [],
+                postRun: [],
+                print: function () {
+                    var e = document.getElementById("output");
+                    return e && (e.value = ""),
+                        function (t) {
+                            arguments.length > 1 && (t = Array.prototype.slice.call(arguments).join(" ")),
+                                console.log(t), e && (e.value += t + "\n", e.scrollTop = e.scrollHeight)
+                        }
+                }(),
+                printErr: function (e) {
+                    arguments.length > 1 && (e = Array.prototype.slice.call(arguments).join(" ")), console
+                        .error(e)
+                },
+                canvas: function () {
+                    var e = document.getElementById("canvas");
+                    return e.addEventListener("webglcontextlost", (function (e) {
+                        alert("WebGL context lost. You will need to reload the page."), e
+                            .preventDefault()
+                    }), !1), e
+                }(),
+                setStatus: function (e) {
+                    if (Module.setStatus.last || (Module.setStatus.last = {
+                            time: Date.now(),
+                            text: ""
+                        }), e !== Module.setStatus.last.text) {
+                        var t = e.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/),
+                            n = Date.now();
+                        t && n - Module.setStatus.last.time < 30 || (Module.setStatus.last.time = n, Module.setStatus.last.text = e, t ? (e = t[1],
+                            progressElement.value = 100 * parseInt(t[2]), progressElement.max = 100 * parseInt(t[4]), progressElement.hidden = !1) 
+                            : (progressElement.value = null, progressElement.max = null, progressElement.hidden = !0, e), 
+                            statusElement.innerHTML = e)
+                    }
+                },
+                totalDependencies: 0,
+                monitorRunDependencies: function (e) {
+                    this.totalDependencies = Math.max(this.totalDependencies, e), Module.setStatus(e ?
+                        "Preparing... (" + (this.totalDependencies - e) + "/" + this.totalDependencies +
+                        ")" : "All downloads complete.")
+                },
+                onRuntimeInitialized: function (e) {
+                    setTimeout(function () {
+                        //hide the loading bar, display the content
+                        document.getElementById("loader").classList.add("hidden");
+                        document.getElementById("content").style.display = "flex";
+
+                        var c = document.getElementById("canvas");
+
+                        var evt = document.createEvent("HTMLEvents");
+                        evt.initEvent("mouseleave", false, true);
+                        c.dispatchEvent(evt);
+                    }, 500)
+
+                }
+            };
+
+        //test webassambly support
+        if (typeof WebAssembly === "object") {
+            //load emscripten code if supported
+            var head = document.getElementsByTagName('head')[0];
+            var script = document.createElement('script');
+            script.src = "index.js";
+            script.type = 'text/javascript';
+            head.appendChild(script);
+
+            //start downloading the wasm
+            Module.setStatus("Downloading..."), window.onerror = function (e) {
+                Module.setStatus("Exception thrown: " + e),
+                    Module.setStatus = function (e) {
+                        e && Module.printErr("[post-exception status] " + e)
+                    }
+            }
+        } else {
+            statusElement.innerHTML =
+                "Your browser does not support Web Assembly.<br><br> Try opening this content in <a href = 'https://webassembly.org/roadmap/'>a browser which does</a>.";
+        }
+    </script>
+</body>
