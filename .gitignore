@@ -1,0 +1,6 @@
+build/
+build_web/
+!build_web/index.html
+!build/SDL2.dll
+.vs/
+.vscode/
