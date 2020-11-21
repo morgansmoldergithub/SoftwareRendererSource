@@ -172,7 +172,7 @@ int main(int argc, char* args[]) {
 
 #ifdef EMSCRIPTEN
 
-            //webgl main loop
+            //emscripten main loop
             emscripten_request_animation_frame_loop(one_iter, 0);
 
 #else
@@ -508,18 +508,18 @@ static void update_application_colors(application_state& app_state)
     //darker hue of complimentary color
     auto complimentary_color_dark = complimentary_color_light;
 
-    complimentary_color_dark.l -= .5f;
-    complimentary_color_light.l -= .35f;
+    complimentary_color_dark.l -= .6f;
+    complimentary_color_light.l -= .25f;
 
     const auto complimentary_color_light_rgb = hsl_to_rgb(complimentary_color_light);
     const auto complimentary_color_dark_rgb = hsl_to_rgb(complimentary_color_dark);
 
     //update ui colors
-    app_state.ui_state.button_color = complimentary_color_light_rgb;
-    app_state.ui_state.toggle_active_color = complimentary_color_light_rgb;
+    app_state.ui_state.button_color = complimentary_color_dark_rgb;
+    app_state.ui_state.toggle_active_color = complimentary_color_dark_rgb;
 
-    app_state.ui_state.button_hover_color = complimentary_color_dark_rgb;
-    app_state.ui_state.toggle_hover_color = complimentary_color_dark_rgb;
+    app_state.ui_state.button_hover_color = complimentary_color_light_rgb;
+    app_state.ui_state.toggle_hover_color = complimentary_color_light_rgb;
 
     //propagate color changes to html
 #if EMSCRIPTEN

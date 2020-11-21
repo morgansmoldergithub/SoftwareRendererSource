@@ -49,7 +49,7 @@ void left_right_selector(
     {
         left_clicked = true;
     }
-    blit_string(ui_draw_position + button_icon_offset, "-", ui_state, output, rgba{});
+    blit_string(ui_draw_position + button_icon_offset, "-", ui_state, output, white);
     increment_col(ui_draw_position, ui_state);
     blit_string(ui_draw_position, label, ui_state, output, ui_state.text_col);
     increment_col(ui_draw_position, ui_state);
@@ -57,7 +57,7 @@ void left_right_selector(
     {
         right_clicked = true;
     }
-    blit_string(ui_draw_position + button_icon_offset, "+", ui_state, output, rgba{});
+    blit_string(ui_draw_position + button_icon_offset, "+", ui_state, output, white);
     increment_row(ui_draw_position, ui_state);
 }
 
