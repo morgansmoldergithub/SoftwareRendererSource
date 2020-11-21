@@ -8,8 +8,7 @@
  * some might expect.
  *
  * For this particular application 0-1 was the most convenient representation,
- * so that is what I went with. If I were to do more color work I would probably
- * consider changing it.
+ * so that is what I went with. 
  */
 struct hsla
 {
@@ -19,7 +18,6 @@ struct hsla
         };
         float e[4];
     };
-    bool operator == (const hsla& rhs) const;
 };
 
 #pragma pack(push)
@@ -34,14 +32,13 @@ struct rgba
     rgba operator * (float rhs) const;
     rgba operator + (float rhs) const;
     rgba operator + (const rgba& rhs) const;
-    bool operator == (const rgba& rhs) const;
 };
 #pragma pack(pop)
 
 const rgba red{ 255, 0, 0, 255 };
 const rgba green{ 0, 255, 0, 255 };
-const rgba blue{ 0, 0,   255, 255 };
-const rgba orange{ 0, 169, 255, 255 };
+const rgba orange{ 0, 0,   255, 255 };
+const rgba blue{ 0, 169, 255, 255 };
 const rgba white{ 255, 255, 255, 255 };
 
 rgba hsl_to_rgb(const hsla& val);

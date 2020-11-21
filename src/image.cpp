@@ -6,16 +6,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
 
-bool hsla::operator == (const hsla& rhs) const
-{
-    for (auto i = 0; i < 4; i++)
-    {
-        if (e[i] - rhs.e[i] > 0.001f) return false;
-    }
-
-    return true;
-}
-
 rgba rgba::operator * (const float rhs) const
 {
     rgba ret{};
@@ -49,7 +39,7 @@ rgba rgba::operator + (const rgba& rhs) const
     rgba ret{};
 
     for (auto y = 0; y < 4; y++) {
-        int res = e[y] + rhs.e[y];
+	    auto res = e[y] + rhs.e[y];
 
         if (res > 255) res = 255;
         if (res < 0) res = 0;
@@ -59,19 +49,8 @@ rgba rgba::operator + (const rgba& rhs) const
     return ret;
 }
 
-bool rgba::operator == (const rgba& rhs) const
-{
-    for (auto i = 0; i < 4; i++)
-    {
-        if (e[i] != rhs.e[i]) return false;
-    }
-
-    return true;
-}
-
-
 /*
-    Converts an rgb value in the range 0 - 255 to hlsl.
+    Converts an rgb value in the range 0 - 255 to hsla.
 
     Based on the algorithm here:
 
@@ -118,7 +97,7 @@ hsla rgb_to_hsl(const rgba& val)
         if (hue < 0) hue = 360.0f + hue;
     }
 
-    hsla res{ roundf(hue) / 360.0f, saturation, lightness };
+    const hsla res{ roundf(hue) / 360.0f, saturation, lightness };
 
     assert(res.h >= 0 && res.h <= 1);
     assert(res.s >= 0 && res.s <= 1);
@@ -147,7 +126,7 @@ float hue_to_rgb(const float p, const float q, float t)
 */
 rgba hsl_to_rgb(const hsla& val)
 {
-    float r = 0, g = 0, b = 0;
+    float r, g, b;
 
     //zero saturation, so the final color is greyscale
     if (val.s == 0)

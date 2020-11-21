@@ -30,8 +30,6 @@ struct v{i}{{
 
     const float & operator [] (const int idx) const;
 
-    bool operator == (const v{i} & rhs);
-
     v{i} operator - (const v{i} & rhs) const;
 
     v{i} operator - (const float rhs) const;
@@ -42,9 +40,9 @@ struct v{i}{{
 
     v{i} operator + (const float rhs);
 
-    float operator * (const v{i} & rhs);
+    float operator * (const v{i} & rhs) const;
 
-    v{i} operator * (const float rhs);
+    v{i} operator * (const float rhs) const;
 
     float inner(const v{i} & rhs);
 
@@ -68,8 +66,6 @@ struct v2{
 
     const float & operator [] (const int idx) const;
 
-    bool operator == (const v2 & rhs);
-
     v2 operator - (const v2 & rhs) const;
 
     v2 operator - (const float rhs) const;
@@ -80,9 +76,9 @@ struct v2{
 
     v2 operator + (const float rhs);
 
-    float operator * (const v2 & rhs);
+    float operator * (const v2 & rhs) const;
 
-    v2 operator * (const float rhs);
+    v2 operator * (const float rhs) const;
 
     float inner(const v2 & rhs);
 
@@ -105,8 +101,6 @@ struct v3{
 
     const float & operator [] (const int idx) const;
 
-    bool operator == (const v3 & rhs);
-
     v3 operator - (const v3 & rhs) const;
 
     v3 operator - (const float rhs) const;
@@ -117,9 +111,9 @@ struct v3{
 
     v3 operator + (const float rhs);
 
-    float operator * (const v3 & rhs);
+    float operator * (const v3 & rhs) const;
 
-    v3 operator * (const float rhs);
+    v3 operator * (const float rhs) const;
 
     float inner(const v3 & rhs);
 
@@ -142,8 +136,6 @@ struct v4{
 
     const float & operator [] (const int idx) const;
 
-    bool operator == (const v4 & rhs);
-
     v4 operator - (const v4 & rhs) const;
 
     v4 operator - (const float rhs) const;
@@ -154,9 +146,9 @@ struct v4{
 
     v4 operator + (const float rhs);
 
-    float operator * (const v4 & rhs);
+    float operator * (const v4 & rhs) const;
 
-    v4 operator * (const float rhs);
+    v4 operator * (const float rhs) const;
 
     float inner(const v4 & rhs);
 
@@ -241,8 +233,6 @@ struct m{i}{{
     inline v{i} operator *(const v{i} & rhs) const;
     
     inline m{i} operator * (const float rhs) const;
-    
-    inline bool operator == (const m{i} & rhs) const;
 
     {get_sub_mat(i)}    
 
@@ -275,8 +265,6 @@ struct m2{
     inline v2 operator *(const v2 & rhs) const;
     
     inline m2 operator * (const float rhs) const;
-    
-    inline bool operator == (const m2 & rhs) const;
 
         
 
@@ -308,8 +296,6 @@ struct m3{
     inline v3 operator *(const v3 & rhs) const;
     
     inline m3 operator * (const float rhs) const;
-    
-    inline bool operator == (const m3 & rhs) const;
 
     inline m2 get_sub_mat(int row_to_skip, int col_to_skip) const;    
 
@@ -341,8 +327,6 @@ struct m4{
     inline v4 operator *(const v4 & rhs) const;
     
     inline m4 operator * (const float rhs) const;
-    
-    inline bool operator == (const m4 & rhs) const;
 
     inline m3 get_sub_mat(int row_to_skip, int col_to_skip) const;    
 

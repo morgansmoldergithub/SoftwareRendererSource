@@ -3,8 +3,6 @@
 
 #include "maths.h"
 
-const float epsilon = 0.0001f;
-
 /*
  * I have generated my math code using simple embedded python scripts. 
  * The system I am using to execute these scripts is called COG.
@@ -20,14 +18,6 @@ for i in range(2, 5):
 float & v{i}::operator [] (const int idx){{ return e[idx]; }}
 
 const float & v{i}::operator [] (const int idx) const{{ return e[idx]; }}
-
-bool v{i}::operator == (const v{i} & rhs){{
-    for (auto i = 0; i < {i}; i++) {{
-        const auto dif = abs(e[i] - rhs[i]);
-        if(dif > epsilon) return false;
-    }}
-    return true;
-}}
 
 v{i} v{i}::operator - (const  v{i} & rhs) const {{
     v{i} res{{}};
@@ -61,13 +51,13 @@ v{i} v{i}::operator + (const float rhs){{
     return res;
 }}
 
-float v{i}::operator * (const v{i} & rhs){{
+float v{i}::operator * (const v{i} & rhs) const{{
     float res = 0;
     for (auto i = 0; i < {i}; i++) res += e[i] * rhs[i];
     return res;
 }}
 
-v{i} v{i}::operator * (const float rhs){{
+v{i} v{i}::operator * (const float rhs) const{{
     v{i} res{{}};
     for (auto i = 0; i < {i}; i++) res[i] = e[i] * rhs;
     return res;
@@ -105,14 +95,6 @@ float & v2::operator [] (const int idx){ return e[idx]; }
 
 const float & v2::operator [] (const int idx) const{ return e[idx]; }
 
-bool v2::operator == (const v2 & rhs){
-    for (auto i = 0; i < 2; i++) {
-        const auto dif = abs(e[i] - rhs[i]);
-        if(dif > epsilon) return false;
-    }
-    return true;
-}
-
 v2 v2::operator - (const  v2 & rhs) const {
     v2 res{};
     for (auto i = 0; i < 2; i++) res[i] = e[i] - rhs[i];
@@ -145,13 +127,13 @@ v2 v2::operator + (const float rhs){
     return res;
 }
 
-float v2::operator * (const v2 & rhs){
+float v2::operator * (const v2 & rhs) const{
     float res = 0;
     for (auto i = 0; i < 2; i++) res += e[i] * rhs[i];
     return res;
 }
 
-v2 v2::operator * (const float rhs){
+v2 v2::operator * (const float rhs) const{
     v2 res{};
     for (auto i = 0; i < 2; i++) res[i] = e[i] * rhs;
     return res;
@@ -188,14 +170,6 @@ float & v3::operator [] (const int idx){ return e[idx]; }
 
 const float & v3::operator [] (const int idx) const{ return e[idx]; }
 
-bool v3::operator == (const v3 & rhs){
-    for (auto i = 0; i < 3; i++) {
-        const auto dif = abs(e[i] - rhs[i]);
-        if(dif > epsilon) return false;
-    }
-    return true;
-}
-
 v3 v3::operator - (const  v3 & rhs) const {
     v3 res{};
     for (auto i = 0; i < 3; i++) res[i] = e[i] - rhs[i];
@@ -228,13 +202,13 @@ v3 v3::operator + (const float rhs){
     return res;
 }
 
-float v3::operator * (const v3 & rhs){
+float v3::operator * (const v3 & rhs) const{
     float res = 0;
     for (auto i = 0; i < 3; i++) res += e[i] * rhs[i];
     return res;
 }
 
-v3 v3::operator * (const float rhs){
+v3 v3::operator * (const float rhs) const{
     v3 res{};
     for (auto i = 0; i < 3; i++) res[i] = e[i] * rhs;
     return res;
@@ -271,14 +245,6 @@ float & v4::operator [] (const int idx){ return e[idx]; }
 
 const float & v4::operator [] (const int idx) const{ return e[idx]; }
 
-bool v4::operator == (const v4 & rhs){
-    for (auto i = 0; i < 4; i++) {
-        const auto dif = abs(e[i] - rhs[i]);
-        if(dif > epsilon) return false;
-    }
-    return true;
-}
-
 v4 v4::operator - (const  v4 & rhs) const {
     v4 res{};
     for (auto i = 0; i < 4; i++) res[i] = e[i] - rhs[i];
@@ -311,13 +277,13 @@ v4 v4::operator + (const float rhs){
     return res;
 }
 
-float v4::operator * (const v4 & rhs){
+float v4::operator * (const v4 & rhs) const{
     float res = 0;
     for (auto i = 0; i < 4; i++) res += e[i] * rhs[i];
     return res;
 }
 
-v4 v4::operator * (const float rhs){
+v4 v4::operator * (const float rhs) const{
     v4 res{};
     for (auto i = 0; i < 4; i++) res[i] = e[i] * rhs;
     return res;
@@ -507,20 +473,6 @@ inline m{i} m{i}::operator * (const float rhs) const{{
     return ret;
 }}
 
-inline bool m{i}::operator == (const m{i} & rhs) const{{
-    for(auto row = 0; row < {i}; row++){{
-        for(auto col = 0; col < {i}; col++){{
-            const auto diff = abs(e[row][col] - rhs[row][col]);
-            
-            if(diff > epsilon){{
-                return false;
-            }}
-        }}
-    }}
-
-    return true;
-}}
-
 {submat(i)}
 
 {determinate(i)}
@@ -596,20 +548,6 @@ inline m2 m2::operator * (const float rhs) const{
     }
 
     return ret;
-}
-
-inline bool m2::operator == (const m2 & rhs) const{
-    for(auto row = 0; row < 2; row++){
-        for(auto col = 0; col < 2; col++){
-            const auto diff = abs(e[row][col] - rhs[row][col]);
-            
-            if(diff > epsilon){
-                return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 
@@ -689,20 +627,6 @@ inline m3 m3::operator * (const float rhs) const{
     }
 
     return ret;
-}
-
-inline bool m3::operator == (const m3 & rhs) const{
-    for(auto row = 0; row < 3; row++){
-        for(auto col = 0; col < 3; col++){
-            const auto diff = abs(e[row][col] - rhs[row][col]);
-            
-            if(diff > epsilon){
-                return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 
@@ -836,20 +760,6 @@ inline m4 m4::operator * (const float rhs) const{
     }
 
     return ret;
-}
-
-inline bool m4::operator == (const m4 & rhs) const{
-    for(auto row = 0; row < 4; row++){
-        for(auto col = 0; col < 4; col++){
-            const auto diff = abs(e[row][col] - rhs[row][col]);
-            
-            if(diff > epsilon){
-                return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 

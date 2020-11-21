@@ -1,8 +1,6 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include <string>
-#include <vector>
 #include "maths.h"
 #include "image.h"
 #include "render.h"

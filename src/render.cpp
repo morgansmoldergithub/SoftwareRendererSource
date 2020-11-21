@@ -1,25 +1,39 @@
 #include "render.h"
 #include "file.h"
 
-void init_output_buffers(output_buffers & output_buffers)
+void init_output_buffers(output_buffers & output_buffers, const int width, const int height)
 {
-	const auto size = output_buffers.frame_buffer.width * output_buffers.frame_buffer.height * output_buffers.frame_buffer.n_channels;
-	
-    output_buffers.frame_buffer.data = new unsigned char[size];
-    memset(output_buffers.frame_buffer.data, 0, size);
+    auto& frame_buffer = output_buffers.frame_buffer;
+    auto& temp_buffer = output_buffers.temp_buffer;
+    auto& z_buffer = output_buffers.z_buffer;
 
-    output_buffers.temp_buffer.data = new unsigned char[size];
-    output_buffers.temp_buffer.height = output_buffers.frame_buffer.height;
-    output_buffers.temp_buffer.width = output_buffers.frame_buffer.width;
-    output_buffers.temp_buffer.n_channels = output_buffers.frame_buffer.n_channels;
-    memset(output_buffers.temp_buffer.data, 0, size);
+    const auto n_channels = 4;
 	
-    const auto z_buffer_size = output_buffers.frame_buffer.width * output_buffers.frame_buffer.height;
+	const auto size = width * height * n_channels;
 
-    output_buffers.z_buffer = new float[z_buffer_size];
-    for (auto i = 0; i < output_buffers.frame_buffer.width * output_buffers.frame_buffer.height; i++)
+	//alloc and init frame buffer
+    frame_buffer.height = height;
+    frame_buffer.width = width;
+    frame_buffer.n_channels = n_channels;
+    frame_buffer.data = new unsigned char[size];
+    assert(frame_buffer.data != nullptr);
+	memset(frame_buffer.data, 0, size);
+
+    //alloc and init temp buffer
+    temp_buffer.height = height;
+    temp_buffer.width = width;
+    temp_buffer.n_channels = n_channels;
+    temp_buffer.data = new unsigned char[size];
+    assert(temp_buffer.data != nullptr);
+	memset(temp_buffer.data, 0, size);
+
+	//alloc and init z buffer
+    const auto z_buffer_size = width * height;
+    z_buffer = new float[z_buffer_size];
+    assert(z_buffer != nullptr);
+    for (auto i = 0; i < width * height; i++)
     {
-        output_buffers.z_buffer[i] = min_z_buffer_val;
+        z_buffer[i] = min_z_buffer_val;
     }
 }
 
@@ -40,6 +54,13 @@ void clear_output_buffers(output_buffers& output_buffers, const rgba& clear_colo
     }
 }
 
+/*
+ * Implementation of Bresenham's line drawing algorithm. Takes
+ * two coordinates in screen space and draws a line between them.
+ * 
+ * Based on the write-up presented here:
+ *      https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+ */
 void draw_line(v2_i v0, v2_i v1, image & out, rgba col){
 	const auto distance_x = abs(v1.x - v0.x);
 	const auto stride_x = v0.x < v1.x ? 1 : -1;
@@ -104,31 +125,54 @@ inline int clamp(int val, const int min, const int max){
     return val;
 }
 
+/*
+ *  This function rasterizes a triangle to the screen.
+ *
+ *  It takes the coordinates for a triangle in world space, and converts
+ *  them to screen coordinates. It then calculates an axis aligned bounding box
+ *  for the triangle, where each unit is a single pixel.
+ *
+ *  It iterates over this bounding box. At each step, the current point is converted to
+ *  barycentric coordinates. If the point is within the triangle we perform depth testing
+ *  and call the fragment shader if necessary. Otherwise we continue the loop. 
+ *
+ *  My implementation is based on these sources:
+ *      https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
+ *      https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
+ *      https://github.com/ssloy/tinyrenderer/wiki/Lesson-2-Triangle-rasterization-and-back-face-culling
+ */
 void triangle(
-    v4 vtx0, v4 vtx1, v4 vtx2,
-    v2 uv0, v2 uv1, v2 uv2, 
-    v3 n0, v3 n1, v3 n2,
-    v3 tri_normal,
-    output_buffers & output_buffers,
+    const v4& vtx0, const v4& vtx1, const v4& vtx2,
+    const v2& uv0, const v2& uv1, const v2& uv2,
+    const v3& n0, const v3& n1, const v3& n2,
+    const v3& tri_normal,
     render_state & state,
     shader & shader
 ){
+    auto& frame_buffer = state.output_buffers.frame_buffer;
+    auto& z_buffer = state.output_buffers.z_buffer;
+	
+	//map coordinates to the screen
 	auto vtx0_screen = state.viewport * vtx0;
 	auto vtx1_screen = state.viewport * vtx1;
 	auto vtx2_screen = state.viewport * vtx2;
 
+	//project from 4d to 2d
 	auto t0 = v3_to_v2(project_3d(vtx0_screen));
     auto t1 = v3_to_v2(project_3d(vtx1_screen));
     auto t2 = v3_to_v2(project_3d(vtx2_screen));
-	
-	auto min_x = clamp(r_min(t0.x, t1.x, t2.x), 0, output_buffers.frame_buffer.width - 1);
-    auto max_x = clamp(r_max(t0.x, t1.x, t2.x), 0, output_buffers.frame_buffer.width - 1);
+
+	//find triangle bounding box x range
+	auto min_x = clamp(r_min(t0.x, t1.x, t2.x), 0, frame_buffer.width - 1);
+    auto max_x = clamp(r_max(t0.x, t1.x, t2.x), 0, frame_buffer.width - 1);
     assert(min_x <= max_x);
 
-	auto min_y = clamp(r_min(t0.y, t1.y, t2.y), 0, output_buffers.frame_buffer.height - 1);
-	auto max_y = clamp(r_max(t0.y, t1.y, t2.y), 0, output_buffers.frame_buffer.height - 1);
+    //find triangle bounding box y range
+	auto min_y = clamp(r_min(t0.y, t1.y, t2.y), 0, frame_buffer.height - 1);
+	auto max_y = clamp(r_max(t0.y, t1.y, t2.y), 0, frame_buffer.height - 1);
 	assert(min_y <= max_y);
 
+	//iterate over the triangle 
     for(auto y = min_y; y <= max_y; y++){
         for(auto x = min_x; x <= max_x; x++){
 	        auto bc = barycentric(t0, t1, t2, v2_i{x, y});
@@ -141,22 +185,23 @@ void triangle(
 							  static_cast<float>(vtx2.z) * bc.z;
 
             	//get current z buffer value
-                auto* memloc = &output_buffers.z_buffer[
-                    static_cast<int>(x + (output_buffers.frame_buffer.height - y) * output_buffers.frame_buffer.width)
+                auto* z_point = &z_buffer[
+                    static_cast<int>(x + (frame_buffer.height - y) * frame_buffer.width)
                 ];
             	
             	//only render the pixel if we are closer to the camera then the current z buffer value
-                if(*memloc < z){
-                    *memloc = z;
+                if(*z_point < z){
+                    *z_point = z;
 
-                    //pass clip space barycentric coordinates to get perspective accurate texture mapping 
+                    //pass clip space barycentric coordinates to get perspective correct texture mapping 
                     auto clip_space_bc = v3{ bc.x / vtx0.w, bc.y / vtx1.w, bc.z / vtx2.w, };
                     clip_space_bc = clip_space_bc / (clip_space_bc.x + clip_space_bc.y + clip_space_bc.z);
 
-                    v2 screen_pos{ static_cast<float>(x), static_cast<float>(y) };
+                	//interpolate uv using barycentric coordinates
                     auto interpolated_uv = uv0 * clip_space_bc.x + uv1 * clip_space_bc.y + uv2 * clip_space_bc.z;
-                    v3 interpolated_normal{};
-                    
+
+                	//interpolate normal using barycentric coordinates
+                	v3 interpolated_normal{};
                     if(state.smooth_shading){
                         interpolated_normal = (n0 * clip_space_bc.x + n1 * clip_space_bc.y + n2 * clip_space_bc.z).normalise();
                     }
@@ -164,9 +209,10 @@ void triangle(
                         interpolated_normal = tri_normal;
                     }
 
+                    //apply fragment shader to get pixel color
                     rgba col{};
-                    if(shader.fragment(clip_space_bc, col, interpolated_normal, interpolated_uv, screen_pos)){
-                        set_pixel(output_buffers.frame_buffer, col, x, y);
+                    if(shader.fragment(clip_space_bc, col, interpolated_normal, interpolated_uv, v2_i{ x, y })){
+                        set_pixel(frame_buffer, col, x, y);
                     }
                 }
             }
@@ -175,9 +221,9 @@ void triangle(
 
 	//draw triangle wireframe if wireframe is on
     if (state.wire_frame) {
-        draw_line(t0, t1, output_buffers.frame_buffer, orange);
-        draw_line(t1, t2, output_buffers.frame_buffer, orange);
-        draw_line(t2, t0, output_buffers.frame_buffer, orange);
+        draw_line(t0, t1, frame_buffer, blue);
+        draw_line(t1, t2, frame_buffer, blue);
+        draw_line(t2, t0, frame_buffer, blue);
     }
 }
 
@@ -186,13 +232,23 @@ void draw_model(model & obj, render_state & state, shader & shader)
     shader.model_to_draw = &obj;
     shader.renderer_state = &state;
 
-	//viewer position in object space, used for fast backface culling
+	/*
+	*   Viewer position in object space, used for fast backface culling. This
+	*   might break some shader setups, as I pre-suppose the matrix transform
+	*   being applied in the vertex shader. In the case of this specific app
+	*   doing things this way worked fine and provided a nice speed boost, as
+	*   I wasn't doing any fancy vertex shader work.
+	*
+	*   This approach is based on the technique described here:
+	*       https://www.gamasutra.com/view/feature/131773/a_compact_method_for_backface_.php?page=2
+    */
     const auto view_position_object_space = m4_to_m3(state.projection * state.model_view).invert() * state.eye;
 
 	for(size_t i = 0; i < obj.mesh_count; i++)
 	{
         auto& mesh = obj.meshes[i];
         shader.mesh_to_draw = &mesh;
+
         shader.begin_pass();
 		
         for (size_t face_no = 0; face_no < mesh.face_count; face_no++) {
@@ -222,16 +278,9 @@ void draw_model(model & obj, render_state & state, shader & shader)
             //rasterize the triangle
             triangle(
                 tri[0], tri[1], tri[2],
-                mesh.uvs[face.uv.x],
-                mesh.uvs[face.uv.y],
-                mesh.uvs[face.uv.z],
-                mesh.normals[face.normal.x],
-                mesh.normals[face.normal.y],
-                mesh.normals[face.normal.z],
-                normal,
-                state.output_buffers,
-                state,
-                shader
+                mesh.uvs[face.uv.x],mesh.uvs[face.uv.y],mesh.uvs[face.uv.z],
+                mesh.normals[face.normal.x], mesh.normals[face.normal.y], mesh.normals[face.normal.z],
+                normal, state, shader
             );
         }
 	}

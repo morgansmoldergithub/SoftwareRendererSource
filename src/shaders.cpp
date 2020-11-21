@@ -2,13 +2,21 @@
 #include "file.h"
 #include "ui.h"
 
+v2_i get_tex_indicies(const v2& uv, const mesh& mesh)
+{
+    return {
+        static_cast<int>(uv.x * static_cast<float>(mesh.diffuse.width - 1)),
+        static_cast<int>(uv.y * static_cast<float>(mesh.diffuse.height - 1))
+    };
+}
+
 struct blinn_shader_normal_map final : public shader{
-    m4 model_view_proj;
-    m3 normal_mat;
+    m4 model_view_proj{};
+    m3 normal_mat{};
 
     //outputs for fragment
-    v3 ndc_vertex[3];
-    v2 vertex_uv[3];
+    v3 ndc_vertex[3]{};
+    v2 vertex_uv[3]{};
 
     const char* name() override { return "Blinn Normal Map"; }
 
@@ -31,17 +39,21 @@ struct blinn_shader_normal_map final : public shader{
         return ret;
     }
 
-    bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2& screen_pos) override
+
+
+    bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) override
     {
-	    auto index_u = static_cast<int>(interpolated_uv.x * (mesh_to_draw->diffuse.width - 1));
-	    auto index_v = static_cast<int>(interpolated_uv.y * (mesh_to_draw->diffuse.height - 1));
-        rgba dif = get_pixel(mesh_to_draw->diffuse, index_u, index_v);
+    	const auto tex_indicies = get_tex_indicies(interpolated_uv, *mesh_to_draw);
+    	
+	    auto dif = get_pixel(mesh_to_draw->diffuse, tex_indicies.x, tex_indicies.y);
         col = dif;
 
-        //skip lighting calulations
+        //skip lighting calculations
         if(!mesh_to_draw->allow_lighting) return true;
 
         v3 normal{};
+
+    	//sample the normal map if we have one
         if (mesh_to_draw->has_normal_map) {
             interpolated_normal = normal_mat * interpolated_normal;
 
@@ -56,10 +68,11 @@ struct blinn_shader_normal_map final : public shader{
 
             auto b = m3{ i, j, interpolated_normal }.transpose();
 
-			normal = get_normal(mesh_to_draw->normal, index_u, index_v);
+			normal = get_normal(mesh_to_draw->normal, tex_indicies.x, tex_indicies.y);
 
             normal = (b * normal).normalise();
         }
+    	//otherwise use the passed normal
         else
         {
             normal = normal_mat * interpolated_normal;
@@ -74,7 +87,7 @@ struct blinn_shader_normal_map final : public shader{
         float spec = 0;
     	if(mesh_to_draw->has_specular_map)
     	{
-            auto spec_rgb = get_pixel(mesh_to_draw->spec, index_u, index_v);
+            auto spec_rgb = get_pixel(mesh_to_draw->spec, tex_indicies.x, tex_indicies.y);
 
             auto r = (normal * (normal.inner(l)) * 2 - l).normalise();
             if (r.z < 0) {
@@ -96,8 +109,8 @@ struct blinn_shader_normal_map final : public shader{
 struct rim_shader final : public shader{
     v3 view_dir{};
     m3 normal_mat{};
-    m4 model_view_proj;
-    v3 l;
+    m4 model_view_proj{};
+    v3 l{};
 
     float rim_max = 0.98f;
     float rim_min = 0.f;
@@ -132,10 +145,11 @@ struct rim_shader final : public shader{
         return ret;
     }
 
-    bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2& screen_pos) override
+    bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) override
     {
         interpolated_normal = normal_mat * interpolated_normal;
-        
+
+
         //rim lighting
         auto intensity = 1 - interpolated_normal.inner(view_dir);
         //clamp to range with soft lerp
@@ -147,7 +161,7 @@ struct rim_shader final : public shader{
              intensity = 0;
         }
 
-		col = rim_col * intensity;
+		col = col + rim_col * intensity;
 
         //specular
         const auto r = (interpolated_normal * (interpolated_normal.inner(l)) * 2 - l).normalise();
@@ -163,6 +177,7 @@ struct rim_shader final : public shader{
 
 		col = col + spec_col * spec;
 
+    	//achieve wireframe effect based on barycentric coordinates 
         auto min_bar = bar.x;
         if(bar.y < min_bar) min_bar = bar.y;
         if(bar.z < min_bar) min_bar = bar.z;
@@ -179,11 +194,11 @@ struct rim_shader final : public shader{
 
 struct flat_shader final : public shader{
     m3 normal_mat{};
-    m4 model_view_proj;
-    v3 l;
-    v3 view_dir;
+    m4 model_view_proj{};
+    v3 l{};
+    v3 view_dir{};
 
-    float raise_factor;
+    float raise_factor{};
 
     const char* name() override { return "Flat"; }
 	
@@ -200,7 +215,7 @@ struct flat_shader final : public shader{
         return model_view_proj  * project_4d(vertex);
     }
 	
-    bool fragment(const v3& bar, rgba& col, v3 interpolated_normal, v2 interpolated_uv, const v2& screen_pos) override
+    bool fragment(const v3& bar, rgba& col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) override
     {
         auto normal = normal_mat * interpolated_normal;
         const auto spec = 1 - (normal * (normal.inner(l)) * 2 - l).normalise().z;
@@ -209,7 +224,7 @@ struct flat_shader final : public shader{
     	{
             auto hsl = model_to_draw->background;
             hsl.l -= 0.3f;
-            hsl.s -= .2f;
+            hsl.s -= .5f;
 
             //complimentary hue
             hsl.h += .5;
@@ -220,7 +235,7 @@ struct flat_shader final : public shader{
             return true;
     	}
 
-        //get grid effect by not drawing every other pixel
+        //get grid effect by not drawing every fourth pixel
         if (static_cast<int>(screen_pos.x) % 4 == 0 || static_cast<int>(screen_pos.y) % 4 == 0)
         {
             col = hsl_to_rgb( model_to_draw->background);
