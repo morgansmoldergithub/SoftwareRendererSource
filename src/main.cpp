@@ -21,12 +21,10 @@
     App Shaders
 */
 static blinn_shader_normal_map blinn_shader_normal_map;
-static rim_shader rim_shader;
 static flat_shader flat_shader;
 
-static const int shader_count = 3;
+static const int shader_count = 2;
 static shader * shaders[shader_count] = {
-    &rim_shader,
     &blinn_shader_normal_map,
     &flat_shader,
 };
@@ -501,7 +499,7 @@ static void update_application_colors(application_state& app_state)
     auto complimentary_color_light = app_state.background_color;
 
     //desaturate
-    complimentary_color_light.s -= .5;
+    complimentary_color_light.s -= 0.2f;
 
     //flip the app background color hue to get a complimentary color
     complimentary_color_light.h -= 0.5f;
