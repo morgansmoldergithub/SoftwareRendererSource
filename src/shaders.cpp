@@ -140,7 +140,7 @@ struct flat_shader final : public shader{
         {
             auto hsl = model_to_draw->background;
             hsl.l -= 0.3f;
-            hsl.s -= .2f;
+            hsl.s -= .4f;
 
             //complimentary hue
             hsl.h += .5;
