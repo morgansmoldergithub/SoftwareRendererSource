@@ -1,4 +1,7 @@
+#include <cassert>
+
 #include "ui.h"
+#include "platform_specific.h"
 
 inline void increment_row(v2_i& offset, const ui_state& state)
 {
