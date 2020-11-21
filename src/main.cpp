@@ -145,7 +145,7 @@ int main(int argc, char* args[]) {
     printf("Rendering with Width:%d and Height:%d\n", render_width, render_height);
 
 
-	/* Setup initial model position and app background color */
+    /* Setup initial model position and app background color */
     global_app_state.target_rot = global_app_state.active_model->initial_rot;
     global_app_state.background_lerp_percent = 1;
     global_app_state.background_color = global_app_state.active_model->background;

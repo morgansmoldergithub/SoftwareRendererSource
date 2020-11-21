@@ -3,8 +3,8 @@
 inline void increment_row(v2_i& offset, const ui_state& state)
 {
     offset = state.draw_rows_up
-				? offset + state.row_padding
-				: offset - state.row_padding;
+                ? offset + state.row_padding
+                : offset - state.row_padding;
 
     offset.x = state.row_start_x;
 }
@@ -12,8 +12,8 @@ inline void increment_row(v2_i& offset, const ui_state& state)
 inline void increment_col(v2_i& offset, const ui_state& state)
 {
     offset = state.draw_cols_right
-				? offset + state.col_padding + v2_i{ state.__last_element_size.x, 0 }
-				: offset - state.col_padding - v2_i{ state.__last_element_size.x, 0 };
+                ? offset + state.col_padding + v2_i{ state.__last_element_size.x, 0 }
+                : offset - state.col_padding - v2_i{ state.__last_element_size.x, 0 };
 }
 
 void labeled_toggle(
@@ -44,7 +44,7 @@ void left_right_selector(
     right_clicked = false;
 
     const v2_i button_icon_offset{3,0};
-	
+    
     if (button(ui_draw_position, output, ui_state))
     {
         left_clicked = true;
@@ -66,7 +66,7 @@ bool labeled_button(
     const char* label
 )
 {
-	const auto result = button(ui_draw_position, output, ui_state);
+    const auto result = button(ui_draw_position, output, ui_state);
     increment_col(ui_draw_position, ui_state);
     blit_string(ui_draw_position, label, ui_state, output, ui_state.text_col);
     increment_row(ui_draw_position, ui_state);
@@ -77,7 +77,7 @@ bool labeled_button(
 inline void draw_box(const v2_i& min, const v2_i& size, output_buffers& out, const rgba& col){
     const auto max = min + size;
 
-	for(auto y = min.y; y < max.y; y++){
+    for(auto y = min.y; y < max.y; y++){
         for(auto x = min.x; x < max.x; x++){
             set_pixel(out.frame_buffer, col, x, y);
         }
@@ -92,19 +92,19 @@ inline bool intersect_box(const v2_i& min, const v2_i& size, const int x, const 
 }
 
 bool button(const v2_i& min, output_buffers& out, ui_state& ui_state){
-	const auto hovering = intersect_box(min, ui_state.button_size, ui_state.mouse_x, ui_state.mouse_y);
-	const auto pressed = hovering && ui_state.mouse_down && ui_state.mouse_down_this_frame;
+    const auto hovering = intersect_box(min, ui_state.button_size, ui_state.mouse_x, ui_state.mouse_y);
+    const auto pressed = hovering && ui_state.mouse_down && ui_state.mouse_down_this_frame;
 
     //toggle off mouse
     if(pressed){
         ui_state.mouse_down = false;
     }
 
-	const auto target_color = pressed
-										? ui_state.button_press_color
-										: hovering
-											? ui_state.button_hover_color
-											: ui_state.button_color;
+    const auto target_color = pressed
+                                        ? ui_state.button_press_color
+                                        : hovering
+                                            ? ui_state.button_hover_color
+                                            : ui_state.button_color;
 
     draw_box(min, ui_state.button_size, out, target_color);
 
@@ -114,8 +114,8 @@ bool button(const v2_i& min, output_buffers& out, ui_state& ui_state){
 }
 
 void toggle(v2_i min, output_buffers& out, ui_state& ui_state, bool& state){
-	const auto hovering = intersect_box(min, ui_state.button_size, ui_state.mouse_x, ui_state.mouse_y);
-	const auto pressed = hovering && ui_state.mouse_down && ui_state.mouse_down_this_frame;
+    const auto hovering = intersect_box(min, ui_state.button_size, ui_state.mouse_x, ui_state.mouse_y);
+    const auto pressed = hovering && ui_state.mouse_down && ui_state.mouse_down_this_frame;
     
     //toggle off mouse
     if(pressed){
@@ -123,9 +123,9 @@ void toggle(v2_i min, output_buffers& out, ui_state& ui_state, bool& state){
         state = !state;
     }
 
-	const auto col = hovering ? ui_state.toggle_hover_color :
-		                 state ? ui_state.toggle_active_color
-		                 : ui_state.toggle_inactive_color;
+    const auto col = hovering ? ui_state.toggle_hover_color :
+                         state ? ui_state.toggle_active_color
+                         : ui_state.toggle_inactive_color;
 
     draw_box(min, ui_state.button_size, out, col);
 
@@ -156,7 +156,7 @@ static void blit_letter(v2_i btm_left, unsigned char letter, ui_state& ui_state,
         btm_left.x = initial_x;
 
         for(auto x = x_min; x < x_max; x++){
-	        const auto sample_color = get_pixel(ui_state.letter_sampler, x, y);
+            const auto sample_color = get_pixel(ui_state.letter_sampler, x, y);
 
             if(sample_color.a > 0){
                 set_pixel(out.frame_buffer, color, btm_left.x, btm_left.y);
@@ -171,7 +171,7 @@ static void blit_letter(v2_i btm_left, unsigned char letter, ui_state& ui_state,
 void blit_string(v2_i min, const char * string, ui_state& ui_state, output_buffers& out, const rgba col)
 {
     auto walk = min;
-	
+    
     const auto stride = 18 / 2;
 
     while(*string != '\0' && walk.x + stride < out.frame_buffer.width){
@@ -214,8 +214,8 @@ void float_selector(v2_i min, output_buffers& out, ui_state& ui_state, float& st
 
 void int_selector(v2_i min, output_buffers& out, ui_state& ui_state, int& state, const int increment)
 {
-	auto walk = min;
-	
+    auto walk = min;
+    
     if (button(walk, out, ui_state)) {
         state -= increment;
     }
@@ -232,7 +232,7 @@ void int_selector(v2_i min, output_buffers& out, ui_state& ui_state, int& state,
         state += increment;
     }
 
-	increment_col(walk, ui_state);
+    increment_col(walk, ui_state);
 
     ui_state.__last_element_size = walk - min;
 }

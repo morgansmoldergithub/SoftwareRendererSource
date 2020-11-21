@@ -34,7 +34,7 @@ struct mesh
     size_t normal_count{};
     size_t uv_count{};
     size_t face_count{};
-	
+    
     v3 * verts{};
     v3 * normals{};
     v2 * uvs{};

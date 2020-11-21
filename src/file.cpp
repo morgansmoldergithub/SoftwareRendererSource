@@ -5,9 +5,9 @@
 #include "platform_specific.h"
 
 static void concat_strings(
-	const size_t source_a_count, const char *source_a,
-	const size_t source_b_count, const char *source_b,
-	char *dest
+    const size_t source_a_count, const char *source_a,
+    const size_t source_b_count, const char *source_b,
+    char *dest
 )
 {
     for(size_t i = 0; i < source_a_count; ++i)
@@ -20,13 +20,13 @@ static void concat_strings(
         *dest++ = *source_b++;
     }
 
-	//final null character to terminate string
+    //final null character to terminate string
     *dest = 0;
 }
 
 inline int model::get_face_count() const
 {
-	auto sum = 0;
+    auto sum = 0;
 
     for(size_t i = 0; i < this->mesh_count; i++)
     {
@@ -38,8 +38,8 @@ inline int model::get_face_count() const
 
 static size_t read_int_checked(FILE* f)
 {
-	auto val = 0;
-	const auto num_read = fread(&val, sizeof(val), 1, f);
+    auto val = 0;
+    const auto num_read = fread(&val, sizeof(val), 1, f);
     assert(num_read == 1);
 
     return val;
@@ -47,8 +47,8 @@ static size_t read_int_checked(FILE* f)
 
 static bool read_bool_checked(FILE* f)
 {
-	auto val = false;
-	const auto num_read = fread(&val, sizeof(val), 1, f);
+    auto val = false;
+    const auto num_read = fread(&val, sizeof(val), 1, f);
     assert(num_read == 1);
 
     return val;
@@ -56,12 +56,12 @@ static bool read_bool_checked(FILE* f)
 
 static const char * read_string_checked(FILE* f)
 {
-	const auto string_len = read_int_checked(f);
+    const auto string_len = read_int_checked(f);
     if(string_len == 0) return nullptr;
 
     const char * ret = new char[string_len];
 
-	const auto num_read = fread((void*) ret, sizeof(char),string_len, f);
+    const auto num_read = fread((void*) ret, sizeof(char),string_len, f);
     assert(num_read == string_len);
 
     return ret;
@@ -106,60 +106,60 @@ void read_mesh(const char* path, mesh& out)
 
     //load verts
     {
-	    const auto vert_count = read_int_checked(f); 
+        const auto vert_count = read_int_checked(f); 
     
         auto* verts = new v3[vert_count];
         assert(verts != nullptr);
-    	
+        
         const auto num_read = fread(verts, sizeof(v3), vert_count, f);
         assert(num_read == vert_count);
 
         out.verts = verts;
         out.vert_count = vert_count;
     }
-	
+    
     //load faces
     {
-	    const auto face_count = read_int_checked(f); 
+        const auto face_count = read_int_checked(f); 
     
         auto* faces = new face[face_count];
         assert(faces != nullptr);
 
         const auto num_read = fread(faces, sizeof(face), face_count, f);
         assert(num_read == face_count);
-    	
+        
         out.faces = faces;
         out.face_count = face_count;
     }
-	
+    
     //load uvs
     {
-	    const auto uv_count = read_int_checked(f); 
+        const auto uv_count = read_int_checked(f); 
 
         auto* uvs = new v2[uv_count];
         assert(uvs != nullptr);
-    	
+        
         const auto num_read = fread(uvs, sizeof(v2), uv_count, f);
         assert(num_read == uv_count);
-    	
+        
         out.uvs = uvs;
         out.uv_count = uv_count;
     }
-	
+    
     //load normals
     {
-	    const auto normal_count = read_int_checked(f); 
+        const auto normal_count = read_int_checked(f); 
 
         auto* normals = new v3[normal_count];
         assert(normals != nullptr);
 
-	    const auto num_read = fread(normals, sizeof(v3), normal_count, f);
+        const auto num_read = fread(normals, sizeof(v3), normal_count, f);
         assert(num_read == normal_count);
-    	
+        
         out.normals = normals;
         out.normal_count = normal_count;
     }
-	
+    
     fclose(f);
 
     printf(
@@ -186,7 +186,7 @@ void load_models(const char* path, model* & output, int& model_count)
 
     for (auto i = 0; i < model_count; i++)
     {
-	    auto& model = output[i];
+        auto& model = output[i];
 
         //read author, name, url
         model.author = read_string_checked(f);
@@ -200,15 +200,15 @@ void load_models(const char* path, model* & output, int& model_count)
         //read starting rotation
         model.initial_rot = read_v3_checked(f);
 
-	    //read mesh count
-	    const auto mesh_count = read_int_checked(f);
+        //read mesh count
+        const auto mesh_count = read_int_checked(f);
         model.mesh_count = mesh_count;
 
         model.meshes = new mesh[mesh_count];
         assert(model.meshes != nullptr);
         
-    	for (size_t j = 0; j < mesh_count; j++)
-    	{
+        for (size_t j = 0; j < mesh_count; j++)
+        {
             auto& mesh = model.meshes[j];
 
             //read lighting flag
@@ -233,8 +233,8 @@ void load_models(const char* path, model* & output, int& model_count)
 
             //load the referenced resources
             char model_bin_path[1024];
-    		concat_strings( strlen(mesh.geo_path), mesh.geo_path, strlen(".bin"), ".bin", model_bin_path);
-    		
+            concat_strings( strlen(mesh.geo_path), mesh.geo_path, strlen(".bin"), ".bin", model_bin_path);
+            
             read_mesh(model_bin_path, mesh);
             load_image(mesh.diffuse_path, mesh.diffuse);
 
@@ -252,7 +252,7 @@ void load_models(const char* path, model* & output, int& model_count)
             {
                 load_image(mesh.emission_path, mesh.emission);
             }
-    	}
+        }
     }
 
     fclose(f);

@@ -50,9 +50,9 @@ struct shader
     render_state * renderer_state{};
     mesh * mesh_to_draw{};
     model* model_to_draw{};
-	
+    
     virtual const char* name() = 0;
-	virtual void begin_pass() = 0;
+    virtual void begin_pass() = 0;
     virtual v4 vertex(v3 & vertex, int face_no, int vert_no) = 0;
     virtual bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) = 0;
 
@@ -63,19 +63,19 @@ struct shader
     shader& operator = (shader & rhs) = delete;
     shader(const shader & rhs) = delete;
     shader(shader&&) = delete;
-	
-	protected:
-	    virtual ~shader() = default;
+    
+    protected:
+        virtual ~shader() = default;
 };
 
 struct screen_space_effect
 {
-	render_state* renderer_state{};
-	image* temp_buffer{};
+    render_state* renderer_state{};
+    image* temp_buffer{};
 
     virtual const char* name() = 0;
     virtual rgba apply(image* frame_buffer, int x, int y, const rgba& pixel) = 0;
-	virtual void render_ui(v2_i& base_pos, ui_state& ui_state, output_buffers& output) = 0;
+    virtual void render_ui(v2_i& base_pos, ui_state& ui_state, output_buffers& output) = 0;
     virtual void reset_settings() = 0;
 
     screen_space_effect() = default;
@@ -85,9 +85,9 @@ struct screen_space_effect
     screen_space_effect(screen_space_effect&&) = delete;
     screen_space_effect& operator =(screen_space_effect && rhs) = delete;
     screen_space_effect& operator =(screen_space_effect & rhs) = delete;
-	
-	protected:
-		virtual ~screen_space_effect() = default;
+    
+    protected:
+        virtual ~screen_space_effect() = default;
 
 };
 

@@ -39,7 +39,7 @@ rgba rgba::operator + (const rgba& rhs) const
     rgba ret{};
 
     for (auto y = 0; y < 4; y++) {
-	    auto res = e[y] + rhs.e[y];
+        auto res = e[y] + rhs.e[y];
 
         if (res > 255) res = 255;
         if (res < 0) res = 0;
@@ -158,15 +158,15 @@ int image::stride() const
 inline void set_pixel(image& out, const rgba& col, int x, int y)
 {
     //only support rgba images
-	assert(out.n_channels == 4);
+    assert(out.n_channels == 4);
 
-	//read from bottom up
-	y = out.width - y - 1;	
+    //read from bottom up
+    y = out.width - y - 1;	
 
     const auto idx = (y * out.width + x);
     const auto max_size = out.width * out.height;
 
-	//bounds check
+    //bounds check
     assert(idx < max_size);
     assert(idx >= 0);
 
@@ -180,12 +180,12 @@ inline rgba get_pixel(image& out, int x, int y)
     assert(out.n_channels == 4);
 
     //read from bottom up
-	y = out.height - y - 1;
+    y = out.height - y - 1;
 
     const auto idx = y * out.width + x;
     const auto max_size = out.width * out.height;
 
-	//bounds check
+    //bounds check
     assert(idx < max_size);
     assert(idx >= 0);
 
@@ -195,7 +195,7 @@ inline rgba get_pixel(image& out, int x, int y)
 
 inline  v3 get_normal(image& out, int x, int y) 
 {
-	const auto pixel = get_pixel(out, x, y);
+    const auto pixel = get_pixel(out, x, y);
 
     return {
         static_cast<float>(pixel.r) / 255.0f * 2.0f - 1.0f,

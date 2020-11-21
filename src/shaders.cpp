@@ -29,7 +29,7 @@ struct blinn_shader_normal_map final : public shader{
 
     v4 vertex(v3 & vertex, int face_no, int vert_no) override
     {
-	    const auto ret = model_view_proj  * project_4d(vertex);
+        const auto ret = model_view_proj  * project_4d(vertex);
 
         if(mesh_to_draw -> allow_lighting && mesh_to_draw->has_normal_map){
             ndc_vertex[vert_no] = project_3d(renderer_state->projection * renderer_state->model_view * project_4d(vertex));
@@ -43,9 +43,9 @@ struct blinn_shader_normal_map final : public shader{
 
     bool fragment(const v3& bar, rgba & col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) override
     {
-    	const auto tex_indicies = get_tex_indicies(interpolated_uv, *mesh_to_draw);
-    	
-	    auto dif = get_pixel(mesh_to_draw->diffuse, tex_indicies.x, tex_indicies.y);
+        const auto tex_indicies = get_tex_indicies(interpolated_uv, *mesh_to_draw);
+        
+        auto dif = get_pixel(mesh_to_draw->diffuse, tex_indicies.x, tex_indicies.y);
         col = dif;
 
         //skip lighting calculations
@@ -53,11 +53,11 @@ struct blinn_shader_normal_map final : public shader{
 
         v3 normal{};
 
-    	//sample the normal map if we have one
+        //sample the normal map if we have one
         if (mesh_to_draw->has_normal_map) {
             interpolated_normal = normal_mat * interpolated_normal;
 
-        	//calculate tangent and bitangent for pixel 
+            //calculate tangent and bitangent for pixel 
             auto ai = m3{ ndc_vertex[1] - ndc_vertex[0], ndc_vertex[2] - ndc_vertex[0], interpolated_normal }.invert();
 
             v3 u_diff{ vertex_uv[1].x - vertex_uv[0].x, vertex_uv[2].x - vertex_uv[0].x, 0 };
@@ -68,16 +68,16 @@ struct blinn_shader_normal_map final : public shader{
 
             auto b = m3{ i, j, interpolated_normal }.transpose();
 
-			normal = get_normal(mesh_to_draw->normal, tex_indicies.x, tex_indicies.y);
+            normal = get_normal(mesh_to_draw->normal, tex_indicies.x, tex_indicies.y);
 
             normal = (b * normal).normalise();
         }
-    	//otherwise use the passed normal
+        //otherwise use the passed normal
         else
         {
             normal = normal_mat * interpolated_normal;
         }
-    	
+        
         //lighting
         auto l = renderer_state->light_dir;
 
@@ -85,17 +85,17 @@ struct blinn_shader_normal_map final : public shader{
         if (diffuse < 0) diffuse = 0;
 
         float spec = 0;
-    	if(mesh_to_draw->has_specular_map)
-    	{
+        if(mesh_to_draw->has_specular_map)
+        {
             auto spec_rgb = get_pixel(mesh_to_draw->spec, tex_indicies.x, tex_indicies.y);
 
             auto r = (normal * (normal.inner(l)) * 2 - l).normalise();
             if (r.z < 0) {
                 r.z = 0;
             }
-    		
-    		spec = pow(r.z, 5 + spec_rgb.b);
-    	}
+            
+            spec = pow(r.z, 5 + spec_rgb.b);
+        }
         
         col = col * (1.2f * diffuse + 0.6f * spec);
 
@@ -114,14 +114,14 @@ struct rim_shader final : public shader{
 
     float rim_max = 0.98f;
     float rim_min = 0.f;
-	
+    
     float spec_max = 0.98f;
     float spec_min = 0.55f;
     float spec_cut = 0.7f;
 
     //orange
     rgba rim_col = rgba{ 250, 169, 0 };
-	
+    
     //pale blue
     rgba spec_col = rgba {105,210,231};
 
@@ -161,7 +161,7 @@ struct rim_shader final : public shader{
              intensity = 0;
         }
 
-		col = col + rim_col * intensity;
+        col = col + rim_col * intensity;
 
         //specular
         const auto r = (interpolated_normal * (interpolated_normal.inner(l)) * 2 - l).normalise();
@@ -175,9 +175,9 @@ struct rim_shader final : public shader{
             spec = 0;
         }
 
-		col = col + spec_col * spec;
+        col = col + spec_col * spec;
 
-    	//achieve wireframe effect based on barycentric coordinates 
+        //achieve wireframe effect based on barycentric coordinates 
         auto min_bar = bar.x;
         if(bar.y < min_bar) min_bar = bar.y;
         if(bar.z < min_bar) min_bar = bar.z;
@@ -201,7 +201,7 @@ struct flat_shader final : public shader{
     float raise_factor{};
 
     const char* name() override { return "Flat"; }
-	
+    
     void begin_pass() override
     {
         l = (m4_to_m3(renderer_state->model_view) * renderer_state->light_dir).normalise();
@@ -214,14 +214,14 @@ struct flat_shader final : public shader{
     {
         return model_view_proj  * project_4d(vertex);
     }
-	
+    
     bool fragment(const v3& bar, rgba& col, v3 interpolated_normal, v2 interpolated_uv, const v2_i& screen_pos) override
     {
         auto normal = normal_mat * interpolated_normal;
         const auto spec = 1 - (normal * (normal.inner(l)) * 2 - l).normalise().z;
 
-    	if(spec > 0.5f)
-    	{
+        if(spec > 0.5f)
+        {
             auto hsl = model_to_draw->background;
             hsl.l -= 0.3f;
             hsl.s -= .5f;
@@ -233,7 +233,7 @@ struct flat_shader final : public shader{
             col = hsl_to_rgb(hsl);
 
             return true;
-    	}
+        }
 
         //get grid effect by not drawing every fourth pixel
         if (static_cast<int>(screen_pos.x) % 4 == 0 || static_cast<int>(screen_pos.y) % 4 == 0)
@@ -273,7 +273,7 @@ struct chromatic_aberration final : public screen_space_effect
         return get_pixel(*buf, x, y);
     }
 
-	const char* name() override { return "Chromatic Aberration"; }
+    const char* name() override { return "Chromatic Aberration"; }
 
     rgba apply(image* frame_buffer, int x, int y, const rgba& pixel) override
     {
@@ -305,7 +305,7 @@ struct chromatic_aberration final : public screen_space_effect
         blit_string(base_pos, "Green Offset", ui_state, output, ui_state.text_col);
         increment_row(base_pos, ui_state);
     }
-	
+    
     void reset_settings() override
     {
         red_offset = 1;
@@ -334,19 +334,19 @@ struct sobel_filter final : public screen_space_effect
     };
 
     float threshold = 0.2f;
-	
+    
     const char* name() override { return "Sobel Filter"; }
 
-	rgba apply(image* frame_buffer, int x, int y, const rgba& pixel) override
-	{
-    	//only apply the shader to pixels where we have rendered something.
-		const auto z_val = renderer_state->output_buffers.z_buffer[y * renderer_state->output_buffers.frame_buffer.width + x];
-    	if(!(z_val > min_z_buffer_val))
-    	{
+    rgba apply(image* frame_buffer, int x, int y, const rgba& pixel) override
+    {
+        //only apply the shader to pixels where we have rendered something.
+        const auto z_val = renderer_state->output_buffers.z_buffer[y * renderer_state->output_buffers.frame_buffer.width + x];
+        if(!(z_val > min_z_buffer_val))
+        {
             return pixel;
-    	}
-    	
-		//can't filter edge pixels of image (need 3x3 matrix of surrounding pixels)
+        }
+        
+        //can't filter edge pixels of image (need 3x3 matrix of surrounding pixels)
         if (
             x == 0 || x >= frame_buffer->width - 2 ||
             y == 0 || y >= frame_buffer->height - 2
@@ -355,40 +355,40 @@ struct sobel_filter final : public screen_space_effect
             return pixel;
         }
 
-	    const auto width = frame_buffer->width;
+        const auto width = frame_buffer->width;
 
-	    const rgba* data_rgb = reinterpret_cast<rgba*>(frame_buffer->data);
+        const rgba* data_rgb = reinterpret_cast<rgba*>(frame_buffer->data);
 
-	    const m3 a{
-	        pixel_to_greyscale_float(data_rgb[(y - 1) * width + x - 1]),
-	        pixel_to_greyscale_float(data_rgb[(y - 1) * width + x]),
-	        pixel_to_greyscale_float(data_rgb[(y - 1) * width + x + 1]),
+        const m3 a{
+            pixel_to_greyscale_float(data_rgb[(y - 1) * width + x - 1]),
+            pixel_to_greyscale_float(data_rgb[(y - 1) * width + x]),
+            pixel_to_greyscale_float(data_rgb[(y - 1) * width + x + 1]),
 
             pixel_to_greyscale_float(data_rgb[y * width + x - 1]),
             pixel_to_greyscale_float(data_rgb[y * width + x]),
             pixel_to_greyscale_float(data_rgb[y * width + x + 1]),
-    	
-	        pixel_to_greyscale_float(data_rgb[(y + 1) * width + x - 1]),
-	        pixel_to_greyscale_float(data_rgb[(y + 1) * width + x]),
-	        pixel_to_greyscale_float(data_rgb[(y + 1) * width + x + 1]),
-	    };
-	    
-	    const auto s1 = (gx * a).sum();
-	    const auto s2 = (gy * a).sum();
+        
+            pixel_to_greyscale_float(data_rgb[(y + 1) * width + x - 1]),
+            pixel_to_greyscale_float(data_rgb[(y + 1) * width + x]),
+            pixel_to_greyscale_float(data_rgb[(y + 1) * width + x + 1]),
+        };
+        
+        const auto s1 = (gx * a).sum();
+        const auto s2 = (gy * a).sum();
 
         const auto res = abs(s1) + abs(s2);
-		
+        
         if (res < threshold) {
             return rgba{ 15, 15, 15, 15 };
         }
-    	
-	    return rgba{
-	        static_cast<unsigned char>(res * 255), 
-	        static_cast<unsigned char>(res * 255),
-	        static_cast<unsigned char>(res * 255),
-	    };
+        
+        return rgba{
+            static_cast<unsigned char>(res * 255), 
+            static_cast<unsigned char>(res * 255),
+            static_cast<unsigned char>(res * 255),
+        };
 
-	}
+    }
 
     void render_ui(v2_i& base_pos, ui_state& ui_state, output_buffers& output) override
     {
@@ -397,7 +397,7 @@ struct sobel_filter final : public screen_space_effect
         blit_string(base_pos, "Threshold", ui_state, output, ui_state.text_col);
         increment_row(base_pos, ui_state);
     }
-	
+    
     void reset_settings() override
     {
         threshold = 0.2f;
@@ -409,7 +409,7 @@ struct jumbo_pixels final : public screen_space_effect
     int pixel_size = 1;
 
     const char* name() override { return "Jumbo Pixels"; }
-	
+    
     rgba apply(image* frame_buffer, int x, int y, const rgba& pixel) override
     {
         //only apply the shader to pixels where we have rendered something.
@@ -418,16 +418,16 @@ struct jumbo_pixels final : public screen_space_effect
         {
             return pixel;
         }
-    	
+        
         x = x % (3 * pixel_size);
-    	
+        
         if (x < pixel_size) {
             return rgba{ pixel.r };
         }
         if (x < 2 * pixel_size) {
             return rgba{ 0, pixel.g };
         }
-    	
+        
         return rgba{ 0, 0, pixel.b };
     }
 
@@ -438,7 +438,7 @@ struct jumbo_pixels final : public screen_space_effect
         blit_string(base_pos, "Pixel Size", ui_state, output, ui_state.text_col);
         increment_row(base_pos, ui_state);
 
-    	//don't let pixel size be less then or equal to zero
+        //don't let pixel size be less then or equal to zero
         if (pixel_size < 1) {
             pixel_size = 1;
         }

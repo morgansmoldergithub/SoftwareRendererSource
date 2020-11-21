@@ -16,7 +16,7 @@ struct ui_state
     rgba toggle_inactive_color{};
 
     rgba text_col{};
-	
+    
     v2_i button_size{ 15, 15 };
     v2_i col_padding{ 10, 0  };
     v2_i row_padding{ 0,  20 };
@@ -28,11 +28,11 @@ struct ui_state
     int mouse_x{};
     int mouse_y{};
 
-	//draw mode
+    //draw mode
     bool draw_rows_up = true;
     bool draw_cols_right = true;
     int row_start_x {};
-	
+    
     //the size of the last rendered element, used for row increment calculations
     v2_i __last_element_size{};
 };
